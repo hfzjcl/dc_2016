@@ -1,42 +1,15 @@
 
-#include "line.h"
-#include <PID_v1.h>
-
-//Define Variables we'll be connecting to
-double Input_pos_l, Output_pos_l,Input_pos_r, Output_pos_r;
-double Kp_pos_l = 10, Ki_pos_l = 0, Kd_pos_l = 10,Kp_pos_r = 10, Ki_pos_r = 0, Kd_pos_r = 10;
-//initialize the variables we're linked to
-double Setpoint = 0;
-
-PID PID_pos_l(&Input_pos_l, &Output_pos_l, &Setpoint, Kp_pos_l, Ki_pos_l, Kd_pos_l, DIRECT);
-PID PID_pos_r(&Input_pos_r, &Output_pos_r, &Setpoint, Kp_pos_r, Ki_pos_r, Kd_pos_r, DIRECT);
-
-
-
+#include "PID.h"
 int motor_work(struct motor moto, int pwm);
 //中断程序
-void doencoder_l() {
-  if (digitalRead(en_l_pin_a) == digitalRead(en_l_pin_b))
-    en_l_pos_a--;
-  else
-    en_l_pos_a++;
-}
-void doencoder_r() {
-  if (digitalRead(en_r_pin_a) == digitalRead(en_r_pin_b))
-    en_r_pos_a++;
-  else
-    en_r_pos_a--;
-}
 
 void setup() {
-
   //PID control
   PID_pos_l.SetOutputLimits(-255, 255);
   PID_pos_r.SetOutputLimits(-255, 255);
   //turn the PID on
   PID_pos_r.SetMode(AUTOMATIC);
   PID_pos_r.SetMode(AUTOMATIC);
-
   PID_pos_l.SetSampleTime(20);
   PID_pos_l.SetSampleTime(20);
   //
@@ -82,6 +55,7 @@ void setup() {
   motor motor_l = {'l', motor_l_in1, motor_l_in2, motor_l_pwm};
   motor motor_r = {'r', motor_r_in1, motor_r_in2, motor_r_pwm};
   Serial.begin(9600);
+  Serial3.begin(9600);
   pinMode(motor_l.in1, OUTPUT);
   pinMode(motor_l.in2, OUTPUT);
   pinMode(motor_r.in1, OUTPUT);
@@ -136,7 +110,7 @@ void loop() {
     mpu.dmpGetGravity(&gravity, &q);
     mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
     //Serial.print("ypr\t");
-    //Serial.print(ypr[0] * 180 / M_PI);
+    Serial3.print(ypr[0] * 180 / M_PI);
     //Serial.print("\t");
     //Serial.print(ypr[1] * 180 / M_PI);
     //Serial.print("\t");
