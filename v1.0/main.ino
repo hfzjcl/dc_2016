@@ -1,5 +1,15 @@
 
 #include "line.h"
+#include <PID_v1.h>
+
+//Define Variables we'll be connecting to
+double Input_pos_l, Output_pos_l,Input_pos_r, Output_pos_r;
+double Kp_pos_l = 10, Ki_pos_l = 0, Kd_pos_l = 10,Kp_pos_r = 10, Ki_pos_r = 0, Kd_pos_r = 10;
+//initialize the variables we're linked to
+double Setpoint = 0;
+
+PID PID_pos_l(&Input_pos_l, &Output_pos_l, &Setpoint, Kp_pos_l, Ki_pos_l, Kd_pos_l, DIRECT);
+PID PID_pos_r(&Input_pos_r, &Output_pos_r, &Setpoint, Kp_pos_r, Ki_pos_r, Kd_pos_r, DIRECT);
 
 
 
@@ -19,6 +29,17 @@ void doencoder_r() {
 }
 
 void setup() {
+
+  //PID control
+  PID_pos_l.SetOutputLimits(-255, 255);
+  PID_pos_r.SetOutputLimits(-255, 255);
+  //turn the PID on
+  PID_pos_r.SetMode(AUTOMATIC);
+  PID_pos_r.SetMode(AUTOMATIC);
+
+  PID_pos_l.SetSampleTime(20);
+  PID_pos_l.SetSampleTime(20);
+  //
 #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
   Wire.begin();
   TWBR = 24; // 400kHz I2C clock (200kHz if CPU is 8MHz). Comment this line if having compilation difficulties with TWBR.
@@ -76,6 +97,7 @@ int Target = 195 + 780;
 int i = 0;
 int pwm;
 void loop() {
+
   while (!mpuInterrupt && fifoCount < packetSize) {
     // other program behavior stuff here
     // .
@@ -119,14 +141,21 @@ void loop() {
     //Serial.print(ypr[1] * 180 / M_PI);
     //Serial.print("\t");
     //Serial.println(ypr[2] * 180 / M_PI);
-    
+
   }
   Serial.print(en_l_pos_a);
   Serial.print(",");
   Serial.println(en_r_pos_a);
+
+  //
+  Input_pos_l = ypr[0] * 180 / M_PI;
+  Input_pos_r = ypr[0] * 180 / M_PI;
+  PID_pos_l.Compute();
+  PID_pos_r.Compute();
+  //
   //pwm = Position_PID(en_l_pos_a, Target);
-  motor_work(motor_l,200);
-  motor_work(motor_r,200);
-  delay(10);
+  motor_work(motor_l, Output_pos_l);
+  motor_work(motor_r, Output_pos_r);
+
 }
 
